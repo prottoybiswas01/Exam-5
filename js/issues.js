@@ -1,9 +1,11 @@
 const API_BASE = "https://phi-lab-server.vercel.app/api/v1/lab";
+const LOCAL_ISSUES_URL = "data/issues.json";
 const AUTH_KEY = "github_issues_auth";
 
 const state = {
   selectedTab: "all",
   query: "",
+  allIssues: [],
   sourceIssues: [],
   visibleIssues: [],
 };
@@ -79,6 +81,36 @@ function withFallback(value) {
   return value;
 }
 
+function extractIssues(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+}
+
+function createSearchBlob(issue) {
+  const labels = Array.isArray(issue.labels) ? issue.labels.join(" ") : "";
+  return [
+    issue.title,
+    issue.description,
+    issue.author,
+    issue.assignee,
+    issue.priority,
+    issue.status,
+    issue.category,
+    issue.labelText,
+    labels,
+  ]
+    .map((value) => String(withFallback(value)).toLowerCase())
+    .join(" ");
+}
+
+function filterIssuesByQuery(issues, query) {
+  const keyword = query.trim().toLowerCase();
+  if (!keyword) return [...issues];
+
+  return issues.filter((issue) => createSearchBlob(issue).includes(keyword));
+}
+
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) {
@@ -87,30 +119,38 @@ async function fetchJson(url) {
   return response.json();
 }
 
-async function loadIssues() {
+async function loadInitialIssues() {
   setLoading(true);
 
-  const query = state.query.trim();
-  const endpoint = query
-    ? `${API_BASE}/issues/search?q=${encodeURIComponent(query)}`
-    : `${API_BASE}/issues`;
-
   try {
-    const payload = await fetchJson(endpoint);
-    const issues = Array.isArray(payload.data) ? payload.data : [];
-    state.sourceIssues = issues.map(normalizeIssue);
+    const localPayload = await fetchJson(LOCAL_ISSUES_URL);
+    const localIssues = extractIssues(localPayload).map(normalizeIssue);
+    if (!localIssues.length) {
+      throw new Error("Local JSON has no issues");
+    }
+
+    state.allIssues = localIssues;
     applyFilters();
-  } catch (error) {
-    state.sourceIssues = [];
-    state.visibleIssues = [];
-    renderSummary();
-    renderIssues("Unable to load issues. Please try again.");
+  } catch (localError) {
+    try {
+      const apiPayload = await fetchJson(`${API_BASE}/issues`);
+      state.allIssues = extractIssues(apiPayload).map(normalizeIssue);
+      applyFilters();
+    } catch (apiError) {
+      state.allIssues = [];
+      state.sourceIssues = [];
+      state.visibleIssues = [];
+      renderSummary();
+      renderIssues("Unable to load issues. Please try again.");
+    }
   } finally {
     setLoading(false);
   }
 }
 
 function applyFilters() {
+  state.sourceIssues = filterIssuesByQuery(state.allIssues, state.query);
+
   const selected = state.selectedTab;
   if (selected === "all") {
     state.visibleIssues = [...state.sourceIssues];
@@ -135,7 +175,7 @@ function renderSummary() {
   const issueWord = state.visibleIssues.length === 1 ? "issue" : "issues";
   const scopeText =
     state.selectedTab === "all" ? "all issues" : `${state.selectedTab} issues`;
-  const queryText = state.query.trim() ? ' from search results' : "";
+  const queryText = state.query.trim() ? " from search results" : "";
 
   summaryText.textContent = `${state.visibleIssues.length} ${issueWord} in ${scopeText}${queryText}`;
   openCountText.textContent = `${openCount} Open`;
@@ -221,6 +261,55 @@ function closeModal() {
   document.body.style.overflow = "";
 }
 
+function renderIssueDetails(issue) {
+  const statusClass = issue.status === "closed" ? "status-closed" : "status-open";
+  const safeDescription = String(withFallback(issue.description));
+
+  modalContent.innerHTML = `
+    <h2>${escapeHtml(issue.title)}</h2>
+    <p class="modal-description">${escapeHtml(safeDescription)}</p>
+
+    <div class="modal-grid">
+      <div class="modal-item">
+        <p>ID</p>
+        <p>${escapeHtml(issue.id)}</p>
+      </div>
+      <div class="modal-item">
+        <p>Status</p>
+        <p><span class="status-badge ${statusClass}">${escapeHtml(issue.status)}</span></p>
+      </div>
+      <div class="modal-item">
+        <p>Category</p>
+        <p>${escapeHtml(issue.category)}</p>
+      </div>
+      <div class="modal-item">
+        <p>Author</p>
+        <p>${escapeHtml(withFallback(issue.author))}</p>
+      </div>
+      <div class="modal-item">
+        <p>Assignee</p>
+        <p>${escapeHtml(withFallback(issue.assignee))}</p>
+      </div>
+      <div class="modal-item">
+        <p>Priority</p>
+        <p>${escapeHtml(withFallback(issue.priority))}</p>
+      </div>
+      <div class="modal-item">
+        <p>Label</p>
+        <p>${escapeHtml(issue.labelText)}</p>
+      </div>
+      <div class="modal-item">
+        <p>CreatedAt</p>
+        <p>${escapeHtml(formatDate(issue.createdAt))}</p>
+      </div>
+      <div class="modal-item">
+        <p>UpdatedAt</p>
+        <p>${escapeHtml(formatDate(issue.updatedAt))}</p>
+      </div>
+    </div>
+  `;
+}
+
 async function openIssueModal(issueId) {
   openModalShell();
 
@@ -231,57 +320,19 @@ async function openIssueModal(issueId) {
     </div>
   `;
 
+  const selectedIssue = state.allIssues.find(
+    (issue) => String(issue.id) === String(issueId)
+  );
+
+  if (selectedIssue) {
+    renderIssueDetails(selectedIssue);
+    return;
+  }
+
   try {
     const payload = await fetchJson(`${API_BASE}/issue/${issueId}`);
-    const issue = normalizeIssue(payload.data);
-
-    const statusClass = issue.status === "closed" ? "status-closed" : "status-open";
-
-    modalContent.innerHTML = `
-      <h2>${escapeHtml(issue.title)}</h2>
-      <p class="modal-description">${escapeHtml(issue.description)}</p>
-
-      <div class="modal-grid">
-        <div class="modal-item">
-          <p>ID</p>
-          <p>${escapeHtml(issue.id)}</p>
-        </div>
-        <div class="modal-item">
-          <p>Status</p>
-          <p><span class="status-badge ${statusClass}">${escapeHtml(
-      issue.status
-    )}</span></p>
-        </div>
-        <div class="modal-item">
-          <p>Category</p>
-          <p>${escapeHtml(issue.category)}</p>
-        </div>
-        <div class="modal-item">
-          <p>Author</p>
-          <p>${escapeHtml(withFallback(issue.author))}</p>
-        </div>
-        <div class="modal-item">
-          <p>Assignee</p>
-          <p>${escapeHtml(withFallback(issue.assignee))}</p>
-        </div>
-        <div class="modal-item">
-          <p>Priority</p>
-          <p>${escapeHtml(withFallback(issue.priority))}</p>
-        </div>
-        <div class="modal-item">
-          <p>Label</p>
-          <p>${escapeHtml(issue.labelText)}</p>
-        </div>
-        <div class="modal-item">
-          <p>CreatedAt</p>
-          <p>${escapeHtml(formatDate(issue.createdAt))}</p>
-        </div>
-        <div class="modal-item">
-          <p>UpdatedAt</p>
-          <p>${escapeHtml(formatDate(issue.updatedAt))}</p>
-        </div>
-      </div>
-    `;
+    const issue = normalizeIssue(payload.data || {});
+    renderIssueDetails(issue);
   } catch (error) {
     modalContent.innerHTML = `
       <div class="modal-loading">
@@ -295,7 +346,7 @@ function registerEvents() {
   searchForm.addEventListener("submit", (event) => {
     event.preventDefault();
     state.query = searchInput.value.trim();
-    loadIssues();
+    applyFilters();
   });
 
   tabButtons.forEach((button) => {
@@ -339,7 +390,7 @@ function initialize() {
   ensureAuth();
   registerEvents();
   setActiveTab();
-  loadIssues();
+  loadInitialIssues();
 }
 
 initialize();
