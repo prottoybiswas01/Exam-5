@@ -1,6 +1,17 @@
-const API_BASE = "https://phi-lab-server.vercel.app/api/v1/lab";
-const LOCAL_ISSUES_URL = "data/issues.json";
-const AUTH_KEY = "github_issues_auth";
+const DEFAULT_CONFIG = {
+  auth: {
+    storageKey: "github_issues_auth",
+  },
+  api: {
+    baseUrl: "https://phi-lab-server.vercel.app/api/v1/lab",
+    localIssuesUrl: "data/issues.json",
+  },
+};
+
+const appConfig = {
+  auth: { ...DEFAULT_CONFIG.auth },
+  api: { ...DEFAULT_CONFIG.api },
+};
 
 const state = {
   selectedTab: "all",
@@ -25,8 +36,45 @@ const modalOverlay = document.getElementById("modal-overlay");
 const modalCloseButton = document.getElementById("modal-close");
 const modalContent = document.getElementById("modal-content");
 
+function getStorageKey() {
+  return appConfig.auth.storageKey || DEFAULT_CONFIG.auth.storageKey;
+}
+
+function getApiBase() {
+  return appConfig.api.baseUrl || DEFAULT_CONFIG.api.baseUrl;
+}
+
+function getLocalIssuesUrl() {
+  return appConfig.api.localIssuesUrl || DEFAULT_CONFIG.api.localIssuesUrl;
+}
+
+async function loadAppConfig() {
+  try {
+    const response = await fetch("data/app-config.json");
+    if (!response.ok) return;
+
+    const payload = await response.json();
+    const auth = payload?.auth || {};
+    const api = payload?.api || {};
+
+    if (typeof auth.storageKey === "string" && auth.storageKey.trim()) {
+      appConfig.auth.storageKey = auth.storageKey.trim();
+    }
+
+    if (typeof api.baseUrl === "string" && api.baseUrl.trim()) {
+      appConfig.api.baseUrl = api.baseUrl.trim();
+    }
+
+    if (typeof api.localIssuesUrl === "string" && api.localIssuesUrl.trim()) {
+      appConfig.api.localIssuesUrl = api.localIssuesUrl.trim();
+    }
+  } catch (error) {
+    // Keep defaults if config loading fails.
+  }
+}
+
 function ensureAuth() {
-  const auth = localStorage.getItem(AUTH_KEY);
+  const auth = localStorage.getItem(getStorageKey());
 
   if (!auth) {
     window.location.href = "index.html";
@@ -123,7 +171,7 @@ async function loadInitialIssues() {
   setLoading(true);
 
   try {
-    const localPayload = await fetchJson(LOCAL_ISSUES_URL);
+    const localPayload = await fetchJson(getLocalIssuesUrl());
     const localIssues = extractIssues(localPayload).map(normalizeIssue);
     if (!localIssues.length) {
       throw new Error("Local JSON has no issues");
@@ -133,7 +181,7 @@ async function loadInitialIssues() {
     applyFilters();
   } catch (localError) {
     try {
-      const apiPayload = await fetchJson(`${API_BASE}/issues`);
+      const apiPayload = await fetchJson(`${getApiBase()}/issues`);
       state.allIssues = extractIssues(apiPayload).map(normalizeIssue);
       applyFilters();
     } catch (apiError) {
@@ -330,7 +378,7 @@ async function openIssueModal(issueId) {
   }
 
   try {
-    const payload = await fetchJson(`${API_BASE}/issue/${issueId}`);
+    const payload = await fetchJson(`${getApiBase()}/issue/${issueId}`);
     const issue = normalizeIssue(payload.data || {});
     renderIssueDetails(issue);
   } catch (error) {
@@ -367,7 +415,7 @@ function registerEvents() {
   });
 
   logoutButton.addEventListener("click", () => {
-    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(getStorageKey());
     window.location.href = "index.html";
   });
 
@@ -386,7 +434,8 @@ function registerEvents() {
   });
 }
 
-function initialize() {
+async function initialize() {
+  await loadAppConfig();
   ensureAuth();
   registerEvents();
   setActiveTab();

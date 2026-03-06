@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "storageKey": "github_issues_auth",
+    "demoUsername": "admin",
+    "demoPassword": "admin123"
+  },
+  "api": {
+    "baseUrl": "https://phi-lab-server.vercel.app/api/v1/lab",
+    "localIssuesUrl": "data/issues.json"
+  }
+}
