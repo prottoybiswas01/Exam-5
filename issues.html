@@ -13,129 +13,68 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="app-body">
-    <div class="app-shell">
-      <header class="app-header">
-        <div class="brand-wrap">
-          <img src="assets/github-logo.png" alt="Logo" class="brand-logo" />
-          <div class="brand-copy">
-            <p class="section-label">Repository Workspace</p>
-            <h1 class="brand-title">GitHub Issues Tracker</h1>
-            <p class="brand-subtitle">
-              Search, filter, and review repository issues from a polished dashboard that
-              adapts smoothly across device sizes.
-            </p>
-          </div>
+    <header class="app-header">
+      <div class="brand-wrap">
+        <img src="assets/github-logo.png" alt="Logo" class="brand-logo" />
+        <div>
+          <h1 class="brand-title">GitHub Issues Tracker</h1>
+        
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <form id="search-form" class="search-form">
+          <input
+            id="search-input"
+            type="text"
+            class="text-input search-input"
+            placeholder="Search issues..."
+          />
+          <button type="submit" class="primary-btn search-btn">Search</button>
+        </form>
+        <button id="logout-btn" type="button" class="ghost-btn">Logout</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="tab-panel">
+        <div class="tabs-row">
+          <button type="button" class="tab-btn is-active" data-tab="all">All</button>
+          <button type="button" class="tab-btn" data-tab="open">Open</button>
+          <button type="button" class="tab-btn" data-tab="closed">Closed</button>
         </div>
 
-        <div class="header-actions">
-          <form id="search-form" class="search-form">
-            <label class="sr-only" for="search-input">Search issues</label>
-            <input
-              id="search-input"
-              type="search"
-              class="text-input search-input"
-              placeholder="Search issues, labels, authors..."
-            />
-            <button type="submit" class="primary-btn search-btn">Search</button>
-          </form>
-          <button id="logout-btn" type="button" class="ghost-btn">Logout</button>
+        <div class="summary-row">
+          <div class="summary-left">
+            <img src="assets/Aperture.png" alt="" class="summary-icon" />
+            <p id="summary-text">0 issues for selected filter</p>
+          </div>
+
+          <div class="summary-right">
+            <div class="status-chip">
+              <img src="assets/Open-Status.png" alt="" />
+              <span id="open-count">0 Open</span>
+            </div>
+            <div class="status-chip">
+              <img src="assets/closed-status.png" alt="" />
+              <span id="closed-count">0 Closed</span>
+            </div>
+          </div>
         </div>
-      </header>
+      </section>
 
-      <main class="app-main">
-        <section class="hero-panel">
-          <div class="hero-copy">
-            <p class="section-label">Issue Overview</p>
-            <h2 class="hero-title">A clearer issue board for mobile, tablet, and desktop.</h2>
-            <p class="hero-text">
-              Keep issue discovery simple with clean metrics, compact cards, and a modal
-              view that stays readable on smaller screens.
-            </p>
-          </div>
+      <section class="cards-shell">
+        <div id="loading-state" class="loading-state hidden">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Loading issues...</p>
+        </div>
 
-          <div class="metrics-grid">
-            <article class="metric-card">
-              <span>Total Issues</span>
-              <strong id="total-count">0</strong>
-            </article>
-            <article class="metric-card">
-              <span>Visible Now</span>
-              <strong id="visible-count">0</strong>
-            </article>
-            <article class="metric-card">
-              <span>Open Issues</span>
-              <strong id="open-count">0 Open</strong>
-            </article>
-            <article class="metric-card">
-              <span>Closed Issues</span>
-              <strong id="closed-count">0 Closed</strong>
-            </article>
-          </div>
-        </section>
-
-        <section class="tab-panel">
-          <div class="panel-top">
-            <div class="tabs-row" role="tablist" aria-label="Issue status filters">
-              <button
-                type="button"
-                class="tab-btn is-active"
-                data-tab="all"
-                role="tab"
-                aria-selected="true"
-              >
-                All
-              </button>
-              <button type="button" class="tab-btn" data-tab="open" role="tab" aria-selected="false">
-                Open
-              </button>
-              <button
-                type="button"
-                class="tab-btn"
-                data-tab="closed"
-                role="tab"
-                aria-selected="false"
-              >
-                Closed
-              </button>
-            </div>
-
-            <div class="summary-right">
-              <div class="status-chip">
-                <img src="assets/Open-Status.png" alt="" />
-                <span id="open-chip-count">0 Open</span>
-              </div>
-              <div class="status-chip">
-                <img src="assets/closed-status.png" alt="" />
-                <span id="closed-chip-count">0 Closed</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="summary-row">
-            <div class="summary-left">
-              <img src="assets/Aperture.png" alt="" class="summary-icon" />
-              <p id="summary-text">0 issues for selected filter</p>
-            </div>
-            <p id="summary-note" class="summary-note">
-              Browse all repository issues or narrow the results with search and status
-              filters.
-            </p>
-          </div>
-        </section>
-
-        <section class="cards-shell">
-          <div id="loading-state" class="loading-state hidden">
-            <div class="spinner" aria-hidden="true"></div>
-            <p>Loading issues...</p>
-          </div>
-
-          <div id="issues-grid" class="issues-grid" aria-live="polite"></div>
-          <p id="empty-state" class="empty-state hidden">
-            No issues found for the selected filter.
-          </p>
-        </section>
-      </main>
-    </div>
+        <div id="issues-grid" class="issues-grid" aria-live="polite"></div>
+        <p id="empty-state" class="empty-state hidden">
+          No issues found for the selected filter.
+        </p>
+      </section>
+    </main>
 
     <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
       <div class="modal-card">
