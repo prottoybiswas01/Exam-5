@@ -29,8 +29,13 @@ const issuesGrid = document.getElementById("issues-grid");
 const loadingState = document.getElementById("loading-state");
 const emptyState = document.getElementById("empty-state");
 const summaryText = document.getElementById("summary-text");
+const summaryNote = document.getElementById("summary-note");
+const totalCountText = document.getElementById("total-count");
+const visibleCountText = document.getElementById("visible-count");
 const openCountText = document.getElementById("open-count");
 const closedCountText = document.getElementById("closed-count");
+const openChipCountText = document.getElementById("open-chip-count");
+const closedChipCountText = document.getElementById("closed-chip-count");
 
 const modalOverlay = document.getElementById("modal-overlay");
 const modalCloseButton = document.getElementById("modal-close");
@@ -109,7 +114,10 @@ function formatDate(dateText) {
   const date = new Date(dateText);
   if (Number.isNaN(date.getTime())) return dateText;
 
-  return date.toLocaleString();
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }
 
 function normalizeIssue(issue) {
@@ -219,15 +227,27 @@ function renderSummary() {
   const closedCount = state.sourceIssues.filter(
     (issue) => issue.status === "closed"
   ).length;
+  const totalCount = state.allIssues.length;
+  const visibleCount = state.visibleIssues.length;
+  const matchingCount = state.sourceIssues.length;
 
-  const issueWord = state.visibleIssues.length === 1 ? "issue" : "issues";
+  const issueWord = visibleCount === 1 ? "issue" : "issues";
   const scopeText =
-    state.selectedTab === "all" ? "all issues" : `${state.selectedTab} issues`;
-  const queryText = state.query.trim() ? " from search results" : "";
+    state.selectedTab === "all"
+      ? "all issue statuses"
+      : `${state.selectedTab} issues`;
+  const query = state.query.trim();
 
-  summaryText.textContent = `${state.visibleIssues.length} ${issueWord} in ${scopeText}${queryText}`;
+  summaryText.textContent = `${visibleCount} ${issueWord} currently shown for ${scopeText}.`;
+  summaryNote.textContent = query
+    ? `Search keyword "${query}" matched ${matchingCount} issue${matchingCount === 1 ? "" : "s"} from ${totalCount} total records.`
+    : `Showing ${matchingCount} issue${matchingCount === 1 ? "" : "s"} in the current dataset. Use tabs to focus on open or closed work.`;
+  totalCountText.textContent = String(totalCount);
+  visibleCountText.textContent = String(visibleCount);
   openCountText.textContent = `${openCount} Open`;
   closedCountText.textContent = `${closedCount} Closed`;
+  openChipCountText.textContent = `${openCount} Open`;
+  closedChipCountText.textContent = `${closedCount} Closed`;
 }
 
 function renderIssues(customMessage = "") {
@@ -294,7 +314,9 @@ function renderIssues(customMessage = "") {
 
 function setActiveTab() {
   tabButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.tab === state.selectedTab);
+    const isActive = button.dataset.tab === state.selectedTab;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
   });
 }
 
@@ -393,6 +415,11 @@ async function openIssueModal(issueId) {
 function registerEvents() {
   searchForm.addEventListener("submit", (event) => {
     event.preventDefault();
+    state.query = searchInput.value.trim();
+    applyFilters();
+  });
+
+  searchInput.addEventListener("input", () => {
     state.query = searchInput.value.trim();
     applyFilters();
   });

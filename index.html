@@ -13,47 +13,76 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="login-body">
-    <main class="auth-wrapper">
-      <section class="auth-card">
-        <img
-          src="assets/github-logo.png"
-          alt="GitHub Issues Tracker Logo"
-          class="auth-logo"
-        />
-        <h1 class="auth-title">GitHub Issues Tracker</h1>
-        <p class="auth-subtitle">Sign in to monitor and review repository issues</p>
+    <main class="auth-layout">
+      <section class="auth-showcase">
+        <p class="section-label">Responsive Workspace</p>
+        <h1 class="showcase-title">Review repository issues comfortably on any screen size.</h1>
+        <p class="showcase-copy">
+          A focused interface for sign-in, issue discovery, and quick detail review with
+          polished spacing from mobile to desktop.
+        </p>
 
-        <form id="login-form" class="auth-form" novalidate>
-          <label class="field-label" for="username">Username</label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            class="text-input"
-            placeholder="Enter username"
-            required
-          />
-
-          <label class="field-label" for="password">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            class="text-input"
-            placeholder="Enter password"
-            required
-          />
-
-          <button type="submit" class="primary-btn">Sign In</button>
-          <p class="auth-error" id="auth-error" aria-live="polite"></p>
-        </form>
-
-        <div class="demo-credentials">
-          <p>Demo Credential</p>
-          <p><strong>Username:</strong> <span id="demo-username">admin</span></p>
-          <p><strong>Password:</strong> <span id="demo-password">admin123</span></p>
+        <div class="showcase-grid" aria-hidden="true">
+          <article class="showcase-card">
+            <span>Fast Search</span>
+            <strong>Filter and inspect issues without losing context.</strong>
+          </article>
+          <article class="showcase-card">
+            <span>Clear Status</span>
+            <strong>Open and closed work stay visible with cleaner summaries.</strong>
+          </article>
+          <article class="showcase-card">
+            <span>Device Ready</span>
+            <strong>Optimized layout for phones, tablets, laptops, and large screens.</strong>
+          </article>
         </div>
       </section>
+
+      <div class="auth-wrapper">
+        <section class="auth-card">
+          <img
+            src="assets/github-logo.png"
+            alt="GitHub Issues Tracker Logo"
+            class="auth-logo"
+          />
+          <p class="section-label auth-label">Secure Sign In</p>
+          <h2 class="auth-title">GitHub Issues Tracker</h2>
+          <p class="auth-subtitle">Sign in to monitor and review repository issues</p>
+
+          <form id="login-form" class="auth-form" novalidate>
+            <label class="field-label" for="username">Username</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              class="text-input"
+              placeholder="Enter username"
+              autocomplete="username"
+              required
+            />
+
+            <label class="field-label" for="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              class="text-input"
+              placeholder="Enter password"
+              autocomplete="current-password"
+              required
+            />
+
+            <button type="submit" class="primary-btn">Sign In</button>
+            <p class="auth-error" id="auth-error" aria-live="polite"></p>
+          </form>
+
+          <div class="demo-credentials">
+            <p>Demo Credential</p>
+            <p><strong>Username:</strong> <span id="demo-username">admin</span></p>
+            <p><strong>Password:</strong> <span id="demo-password">admin123</span></p>
+          </div>
+        </section>
+      </div>
     </main>
 
     <script src="js/login.js"></script>
