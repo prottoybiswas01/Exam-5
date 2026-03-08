@@ -4,7 +4,6 @@ const DEFAULT_CONFIG = {
   },
   api: {
     baseUrl: "https://phi-lab-server.vercel.app/api/v1/lab",
-    localIssuesUrl: "data/issues.json",
   },
 };
 
@@ -45,10 +44,6 @@ function getApiBase() {
   return appConfig.api.baseUrl || DEFAULT_CONFIG.api.baseUrl;
 }
 
-function getLocalIssuesUrl() {
-  return appConfig.api.localIssuesUrl || DEFAULT_CONFIG.api.localIssuesUrl;
-}
-
 function getIssuesUrl() {
   return `${getApiBase()}/issues`;
 }
@@ -76,10 +71,6 @@ async function loadAppConfig() {
 
     if (typeof api.baseUrl === "string" && api.baseUrl.trim()) {
       appConfig.api.baseUrl = api.baseUrl.trim();
-    }
-
-    if (typeof api.localIssuesUrl === "string" && api.localIssuesUrl.trim()) {
-      appConfig.api.localIssuesUrl = api.localIssuesUrl.trim();
     }
   } catch (error) {
     // Keep defaults if config loading fails.
@@ -332,23 +323,13 @@ async function fetchJson(url) {
 }
 
 async function requestAllIssues() {
-  try {
-    const payload = await fetchJson(getIssuesUrl());
-    return extractIssues(payload).map(normalizeIssue);
-  } catch (apiError) {
-    const localPayload = await fetchJson(getLocalIssuesUrl());
-    return extractIssues(localPayload).map(normalizeIssue);
-  }
+  const payload = await fetchJson(getIssuesUrl());
+  return extractIssues(payload).map(normalizeIssue);
 }
 
 async function requestSearchIssues(query) {
-  try {
-    const payload = await fetchJson(getSearchUrl(query));
-    return extractIssues(payload).map(normalizeIssue);
-  } catch (apiError) {
-    const fallbackIssues = state.allIssues.length ? state.allIssues : await requestAllIssues();
-    return filterIssuesByQuery(fallbackIssues, query).map(normalizeIssue);
-  }
+  const payload = await fetchJson(getSearchUrl(query));
+  return extractIssues(payload).map(normalizeIssue);
 }
 
 function applyFilters() {
