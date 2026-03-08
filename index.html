@@ -7,52 +7,70 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="login-body">
-    <main class="auth-wrapper">
+    <main class="auth-shell">
       <section class="auth-card">
-        <img
-          src="assets/github-logo.png"
-          alt="GitHub Issues Tracker Logo"
-          class="auth-logo"
-        />
-        <h1 class="auth-title">GitHub Issues Tracker</h1>
-        <p class="auth-subtitle">Sign in to monitor and review repository issues</p>
+        <div class="auth-brand">
+          <img
+            src="assets/github-logo.png"
+            alt="GitHub Issues Tracker Logo"
+            class="auth-logo"
+          />
+          <div class="auth-copy">
+            <h1 class="auth-title">GitHub Issues Tracker</h1>
+            <p class="auth-subtitle">Sign in to manage your issues</p>
+          </div>
+        </div>
 
         <form id="login-form" class="auth-form" novalidate>
-          <label class="field-label" for="username">Username</label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            class="text-input"
-            placeholder="Enter username"
-            required
-          />
+          <div class="field-group">
+            <label class="field-label" for="username">Username</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              class="text-input"
+              placeholder="Enter Username"
+              autocomplete="username"
+              required
+            />
+            <p class="field-hint">Default: admin</p>
+          </div>
 
-          <label class="field-label" for="password">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            class="text-input"
-            placeholder="Enter password"
-            required
-          />
+          <div class="field-group">
+            <label class="field-label" for="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              class="text-input"
+              placeholder="Enter Password"
+              autocomplete="current-password"
+              required
+            />
+            <p class="field-hint">Default: admin123</p>
+          </div>
 
-          <button type="submit" class="primary-btn">Sign In</button>
+          <button type="submit" class="primary-btn auth-submit">Sign In</button>
           <p class="auth-error" id="auth-error" aria-live="polite"></p>
         </form>
 
-        <div class="demo-credentials">
-          <p>Demo Credential</p>
-          <p><strong>Username:</strong> <span id="demo-username">admin</span></p>
-          <p><strong>Password:</strong> <span id="demo-password">admin123</span></p>
+        <div class="auth-divider" aria-hidden="true">
+          <span>OR</span>
         </div>
+
+        <section class="demo-credentials" aria-label="Demo credentials">
+          <p class="demo-label">Demo Credentials:</p>
+          <div class="demo-card">
+            <p><strong>Username:</strong> <span id="demo-username">admin</span></p>
+            <p><strong>Password:</strong> <span id="demo-password">admin123</span></p>
+          </div>
+        </section>
       </section>
     </main>
 

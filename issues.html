@@ -7,32 +7,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="app-body">
     <header class="app-header">
-      <div class="brand-wrap">
-        <img src="assets/github-logo.png" alt="Logo" class="brand-logo" />
-        <div>
-          <h1 class="brand-title">GitHub Issues Tracker</h1>
-        
+      <div class="app-header-inner">
+        <div class="brand-wrap">
+          <img src="assets/github-logo.png" alt="Logo" class="brand-logo" />
+          <div>
+            <h1 class="brand-title">GitHub Issues Tracker</h1>
+          </div>
         </div>
-      </div>
 
-      <div class="header-actions">
-        <form id="search-form" class="search-form">
-          <input
-            id="search-input"
-            type="text"
-            class="text-input search-input"
-            placeholder="Search issues..."
-          />
+        <form id="search-form" class="search-form" role="search">
+          <label class="sr-only" for="search-input">Search issues</label>
+          <div class="search-field">
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8" />
+                <path
+                  d="M16 16L20 20"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            <input
+              id="search-input"
+              type="text"
+              class="text-input search-input"
+              placeholder="Search issues..."
+            />
+          </div>
           <button type="submit" class="primary-btn search-btn">Search</button>
         </form>
-        <button id="logout-btn" type="button" class="ghost-btn">Logout</button>
       </div>
     </header>
 
@@ -43,27 +55,34 @@
           <button type="button" class="tab-btn" data-tab="open">Open</button>
           <button type="button" class="tab-btn" data-tab="closed">Closed</button>
         </div>
+      </section>
 
+      <section class="issue-shell">
         <div class="summary-row">
           <div class="summary-left">
-            <img src="assets/Aperture.png" alt="" class="summary-icon" />
-            <p id="summary-text">0 issues for selected filter</p>
+            <div class="summary-icon-wrap">
+              <img src="assets/Aperture.png" alt="" class="summary-icon" />
+            </div>
+            <div class="summary-copy">
+              <p id="summary-total" class="summary-total">0 Issues</p>
+              <p id="summary-description" class="summary-description">
+                Track and manage your project issues
+              </p>
+            </div>
           </div>
 
           <div class="summary-right">
             <div class="status-chip">
-              <img src="assets/Open-Status.png" alt="" />
+              <span class="status-dot status-dot-open" aria-hidden="true"></span>
               <span id="open-count">0 Open</span>
             </div>
             <div class="status-chip">
-              <img src="assets/closed-status.png" alt="" />
+              <span class="status-dot status-dot-closed" aria-hidden="true"></span>
               <span id="closed-count">0 Closed</span>
             </div>
           </div>
         </div>
-      </section>
 
-      <section class="cards-shell">
         <div id="loading-state" class="loading-state hidden">
           <div class="spinner" aria-hidden="true"></div>
           <p>Loading issues...</p>
