@@ -76,9 +76,17 @@
       </section>
     </main>
 
-    <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div
+      id="modal-overlay"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div class="modal-card">
-        <button id="modal-close" class="modal-close-btn" aria-label="Close modal">x</button>
+        <button id="modal-close" type="button" class="modal-close-btn" aria-label="Close modal">
+          &times;
+        </button>
         <div id="modal-content" class="modal-content"></div>
       </div>
     </div>

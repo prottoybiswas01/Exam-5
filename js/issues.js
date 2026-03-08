@@ -112,6 +112,26 @@ function formatDate(dateText) {
   return date.toLocaleString();
 }
 
+function formatCompactDate(dateText) {
+  if (!dateText) return "N/A";
+
+  const date = new Date(dateText);
+  if (Number.isNaN(date.getTime())) return dateText;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function toSlug(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 function normalizeIssue(issue) {
   const labels = Array.isArray(issue.labels) ? issue.labels : [];
   const status = (issue.status || "open").toLowerCase();
@@ -127,6 +147,24 @@ function normalizeIssue(issue) {
 function withFallback(value) {
   if (value === undefined || value === null || value === "") return "N/A";
   return value;
+}
+
+function renderLabelPills(labels, className = "label-pill") {
+  const safeLabels = Array.isArray(labels) && labels.length ? labels : ["general"];
+
+  return safeLabels
+    .map((label) => {
+      const slug = toSlug(label);
+      return `<span class="${className} label-tone-${slug}">${escapeHtml(label)}</span>`;
+    })
+    .join("");
+}
+
+function renderPriorityPill(priority, className = "priority-pill") {
+  const safePriority = String(withFallback(priority));
+  const slug = toSlug(safePriority) || "na";
+
+  return `<span class="${className} priority-${slug}">${escapeHtml(safePriority)}</span>`;
 }
 
 function extractIssues(payload) {
@@ -250,41 +288,44 @@ function renderIssues(customMessage = "") {
     const card = document.createElement("article");
     const statusClass = issue.status === "closed" ? "status-closed" : "status-open";
     card.className = `issue-card ${statusClass}`;
+    card.dataset.issueId = issue.id;
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `View details for ${issue.title}`);
 
     const description = String(withFallback(issue.description));
     const shortDescription =
       description.length > 130
         ? `${description.slice(0, 130)}...`
         : description;
+    const author = escapeHtml(withFallback(issue.author));
+    const createdAt = escapeHtml(formatCompactDate(issue.createdAt));
 
     card.innerHTML = `
       <div class="card-head">
-        <button class="issue-link" data-issue-id="${issue.id}">
-          ${escapeHtml(issue.title)}
-        </button>
-        <span class="status-badge ${statusClass}">
-          ${escapeHtml(issue.status)}
-        </span>
+        <div>
+          <p class="issue-number">Issue #${escapeHtml(issue.id)}</p>
+          <h2 class="issue-link">${escapeHtml(issue.title)}</h2>
+        </div>
+        <span class="status-badge ${statusClass}">${escapeHtml(issue.status)}</span>
       </div>
 
       <p class="issue-description">${escapeHtml(shortDescription)}</p>
 
-      <div class="meta-grid">
-        <p class="meta-item"><span>Status</span>${escapeHtml(issue.status)}</p>
-        <p class="meta-item"><span>Category</span>${escapeHtml(issue.category)}</p>
-        <p class="meta-item"><span>Author</span>${escapeHtml(withFallback(issue.author))}</p>
-        <p class="meta-item"><span>Priority</span>${escapeHtml(withFallback(issue.priority))}</p>
-        <p class="meta-item"><span>Label</span>${escapeHtml(issue.labelText)}</p>
-        <p class="meta-item"><span>CreatedAt</span>${escapeHtml(
-          formatDate(issue.createdAt)
-        )}</p>
+      <div class="card-meta-line">
+        <span>Opened by ${author}</span>
+        <span class="meta-separator" aria-hidden="true">&bull;</span>
+        <span>${createdAt}</span>
       </div>
 
       <div class="card-footer">
-        <span class="label-pill">${escapeHtml(issue.labelText)}</span>
-        <button class="details-btn" type="button" data-issue-id="${issue.id}">
-          View Issue
-        </button>
+        <div class="label-row">
+          ${renderLabelPills(issue.labels)}
+        </div>
+        <div class="card-trailing">
+          ${renderPriorityPill(issue.priority, "priority-pill priority-pill-small")}
+          <span class="details-btn">Click to view</span>
+        </div>
       </div>
     `;
 
@@ -312,48 +353,66 @@ function closeModal() {
 function renderIssueDetails(issue) {
   const statusClass = issue.status === "closed" ? "status-closed" : "status-open";
   const safeDescription = String(withFallback(issue.description));
+  const author = escapeHtml(withFallback(issue.author));
+  const assignee = escapeHtml(withFallback(issue.assignee));
+  const labels = renderLabelPills(issue.labels, "modal-label-pill");
 
   modalContent.innerHTML = `
-    <h2>${escapeHtml(issue.title)}</h2>
-    <p class="modal-description">${escapeHtml(safeDescription)}</p>
+    <div class="modal-hero">
+      <p class="modal-kicker">Issue #${escapeHtml(issue.id)}</p>
+      <h2 id="modal-title">${escapeHtml(issue.title)}</h2>
+
+      <div class="modal-meta-row">
+        <span class="status-badge ${statusClass}">${escapeHtml(issue.status)}</span>
+        <span class="modal-meta-separator" aria-hidden="true">&bull;</span>
+        <span>Opened by ${author}</span>
+        <span class="modal-meta-separator" aria-hidden="true">&bull;</span>
+        <span>${escapeHtml(formatCompactDate(issue.createdAt))}</span>
+      </div>
+
+      <div class="modal-label-row">
+        ${labels}
+      </div>
+
+      <p class="modal-description">${escapeHtml(safeDescription)}</p>
+    </div>
+
+    <div class="modal-summary-panel">
+      <div class="modal-summary-item">
+        <p>Assignee:</p>
+        <strong>${assignee}</strong>
+      </div>
+      <div class="modal-summary-item">
+        <p>Priority:</p>
+        ${renderPriorityPill(issue.priority)}
+      </div>
+    </div>
 
     <div class="modal-grid">
-      <div class="modal-item">
-        <p>ID</p>
-        <p>${escapeHtml(issue.id)}</p>
-      </div>
-      <div class="modal-item">
-        <p>Status</p>
-        <p><span class="status-badge ${statusClass}">${escapeHtml(issue.status)}</span></p>
-      </div>
       <div class="modal-item">
         <p>Category</p>
         <p>${escapeHtml(issue.category)}</p>
       </div>
       <div class="modal-item">
         <p>Author</p>
-        <p>${escapeHtml(withFallback(issue.author))}</p>
+        <p>${author}</p>
       </div>
       <div class="modal-item">
-        <p>Assignee</p>
-        <p>${escapeHtml(withFallback(issue.assignee))}</p>
-      </div>
-      <div class="modal-item">
-        <p>Priority</p>
-        <p>${escapeHtml(withFallback(issue.priority))}</p>
-      </div>
-      <div class="modal-item">
-        <p>Label</p>
+        <p>Labels</p>
         <p>${escapeHtml(issue.labelText)}</p>
       </div>
       <div class="modal-item">
-        <p>CreatedAt</p>
+        <p>Created</p>
         <p>${escapeHtml(formatDate(issue.createdAt))}</p>
       </div>
       <div class="modal-item">
-        <p>UpdatedAt</p>
+        <p>Updated</p>
         <p>${escapeHtml(formatDate(issue.updatedAt))}</p>
       </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="modal-action-btn" data-modal-close>Close</button>
     </div>
   `;
 }
@@ -414,6 +473,16 @@ function registerEvents() {
     openIssueModal(trigger.dataset.issueId);
   });
 
+  issuesGrid.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    const trigger = event.target.closest(".issue-card[data-issue-id]");
+    if (!trigger) return;
+
+    event.preventDefault();
+    openIssueModal(trigger.dataset.issueId);
+  });
+
   logoutButton.addEventListener("click", () => {
     localStorage.removeItem(getStorageKey());
     window.location.href = "index.html";
@@ -422,6 +491,11 @@ function registerEvents() {
   modalCloseButton.addEventListener("click", closeModal);
 
   modalOverlay.addEventListener("click", (event) => {
+    if (event.target.closest("[data-modal-close]")) {
+      closeModal();
+      return;
+    }
+
     if (event.target === modalOverlay) {
       closeModal();
     }
