@@ -19,10 +19,12 @@ const state = {
   allIssues: [],
   sourceIssues: [],
   visibleIssues: [],
+  isLoading: false,
 };
 
 const searchForm = document.getElementById("search-form");
 const searchInput = document.getElementById("search-input");
+const searchSubmitButton = searchForm.querySelector(".search-btn");
 const tabButtons = document.querySelectorAll(".tab-btn");
 const issuesGrid = document.getElementById("issues-grid");
 const loadingState = document.getElementById("loading-state");
@@ -91,6 +93,11 @@ function ensureAuth() {
 }
 
 function setLoading(isLoading, label = "Loading issues...") {
+  state.isLoading = isLoading;
+  searchForm.setAttribute("aria-busy", String(isLoading));
+  searchSubmitButton.disabled = isLoading;
+  searchSubmitButton.textContent = label.startsWith("Searching") ? "Searching..." : "Search";
+
   if (isLoading) {
     loadingState.classList.remove("hidden");
     issuesGrid.classList.add("hidden");
