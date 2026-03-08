@@ -35,7 +35,6 @@ const summaryDescription = document.getElementById("summary-description");
 const openCountText = document.getElementById("open-count");
 const closedCountText = document.getElementById("closed-count");
 const modalOverlay = document.getElementById("modal-overlay");
-const modalCloseButton = document.getElementById("modal-close");
 const modalContent = document.getElementById("modal-content");
 
 function getStorageKey() {
@@ -307,24 +306,13 @@ function renderIssues(customMessage = "") {
       (state.query.trim()
         ? "No matching issues found. Try another keyword."
         : "No issues found for the selected filter.");
-
-    if (state.query.trim()) {
-      emptyState.innerHTML = `
-        <span>${escapeHtml(message)}</span>
-        <button type="button" class="empty-state-action" data-reset-search>
-          Clear search
-        </button>
-      `;
-    } else {
-      emptyState.textContent = message;
-    }
-
+    emptyState.textContent = message;
     emptyState.classList.remove("hidden");
     return;
   }
 
   emptyState.classList.add("hidden");
-  emptyState.innerHTML = "";
+  emptyState.textContent = "";
 
   state.visibleIssues.forEach((issue) => {
     const card = document.createElement("article");
@@ -362,10 +350,7 @@ function renderIssues(customMessage = "") {
         <div class="label-row">
           ${renderLabelPills(issue.labels)}
         </div>
-        <div class="card-trailing">
-          ${renderPriorityPill(issue.priority, "priority-pill priority-pill-small")}
-          <span class="details-btn">Click to view</span>
-        </div>
+        ${renderPriorityPill(issue.priority, "priority-pill priority-pill-small")}
       </div>
     `;
 
@@ -380,10 +365,8 @@ function setActiveTab() {
 }
 
 function openModalShell() {
-  state.lastFocusedElement = document.activeElement;
   modalOverlay.classList.remove("hidden");
   document.body.style.overflow = "hidden";
-  modalCloseButton.focus();
 }
 
 function closeModal() {
@@ -445,39 +428,19 @@ function renderIssueDetails(issue) {
       </div>
     </div>
 
-    <div class="modal-grid">
-      <div class="modal-item">
-        <p>Category</p>
-        <p>${escapeHtml(issue.category)}</p>
-      </div>
-      <div class="modal-item">
-        <p>Author</p>
-        <p>${author}</p>
-      </div>
-      <div class="modal-item">
-        <p>Labels</p>
-        <p>${escapeHtml(issue.labelText)}</p>
-      </div>
-      <div class="modal-item">
-        <p>Created</p>
-        <p>${escapeHtml(formatDate(issue.createdAt))}</p>
-      </div>
-      <div class="modal-item">
-        <p>Updated</p>
-        <p>${escapeHtml(formatDate(issue.updatedAt))}</p>
-      </div>
-    </div>
-
     <div class="modal-actions">
       <button type="button" class="modal-action-btn" data-modal-close>Close</button>
     </div>
   `;
+
+  const modalActionButton = modalContent.querySelector("[data-modal-close]");
+  if (modalActionButton) {
+    modalActionButton.focus();
+  }
 }
 
 async function openIssueModal(issueId, triggerElement) {
-  if (triggerElement) {
-    state.lastFocusedElement = triggerElement;
-  }
+  state.lastFocusedElement = triggerElement || document.activeElement;
 
   openModalShell();
 
@@ -586,16 +549,6 @@ function registerEvents() {
 
     event.preventDefault();
     openIssueModal(trigger.dataset.issueId, trigger);
-  });
-
-  modalCloseButton.addEventListener("click", closeModal);
-
-  emptyState.addEventListener("click", async (event) => {
-    if (!event.target.closest("[data-reset-search]")) return;
-
-    searchInput.value = "";
-    state.query = "";
-    await loadIssues();
   });
 
   modalOverlay.addEventListener("click", (event) => {

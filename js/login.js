@@ -16,7 +16,6 @@ const passwordInput = document.getElementById("password");
 const errorText = document.getElementById("auth-error");
 const demoUsernameText = document.getElementById("demo-username");
 const demoPasswordText = document.getElementById("demo-password");
-const demoCard = document.getElementById("demo-card");
 
 function getStorageKey() {
   return appConfig.auth.storageKey || DEFAULT_CONFIG.auth.storageKey;
@@ -63,13 +62,6 @@ function clearError() {
   errorText.textContent = "";
 }
 
-function applyDemoCredentials() {
-  usernameInput.value = getDemoUsername();
-  passwordInput.value = getDemoPassword();
-  clearError();
-  usernameInput.focus();
-}
-
 function handleLoginSubmit(event) {
   event.preventDefault();
 
@@ -104,16 +96,6 @@ async function initialize() {
 
   usernameInput.addEventListener("input", clearError);
   passwordInput.addEventListener("input", clearError);
-
-  if (demoCard) {
-    demoCard.addEventListener("click", applyDemoCredentials);
-    demoCard.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-
-      event.preventDefault();
-      applyDemoCredentials();
-    });
-  }
 
   loginForm.addEventListener("submit", handleLoginSubmit);
 }
