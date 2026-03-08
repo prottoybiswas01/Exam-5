@@ -547,6 +547,19 @@ function registerEvents() {
     await loadIssues();
   });
 
+  searchInput.addEventListener("keydown", async (event) => {
+    if (event.key !== "Escape") return;
+    if (searchInput.value.trim() === "" && state.query === "") return;
+
+    event.preventDefault();
+    searchInput.value = "";
+
+    if (state.query === "") return;
+
+    state.query = "";
+    await loadIssues();
+  });
+
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const nextTab = button.dataset.tab;

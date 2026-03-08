@@ -573,6 +573,10 @@ input {
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.35;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .status-badge {
@@ -603,6 +607,10 @@ input {
   color: var(--muted);
   font-size: 0.94rem;
   line-height: 1.5;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .card-meta-line {
@@ -983,6 +991,10 @@ input {
     padding: 16px;
   }
 
+  .brand-title {
+    font-size: 1.4rem;
+  }
+
   .summary-row {
     align-items: flex-start;
     flex-direction: column;
@@ -991,6 +1003,12 @@ input {
   .summary-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .card-trailing {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
   }
 
   .search-form {
