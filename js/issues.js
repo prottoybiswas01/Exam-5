@@ -146,6 +146,19 @@ function formatCompactDate(dateText) {
   }).format(date);
 }
 
+function formatCardDate(dateText) {
+  if (!dateText) return "N/A";
+
+  const date = new Date(dateText);
+  if (Number.isNaN(date.getTime())) return dateText;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
 function capitalizeWord(value) {
   const text = String(value || "");
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
@@ -168,6 +181,79 @@ function toSlug(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function getStatusIcon(status) {
+  if (status === "closed") {
+    return `
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"></circle>
+        <circle cx="10" cy="10" r="2.2" fill="currentColor"></circle>
+      </svg>
+    `;
+  }
+
+  return `
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"></circle>
+      <path
+        d="M10 6V10L12.7 12"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      ></path>
+    </svg>
+  `;
+}
+
+function getLabelIcon(label) {
+  const slug = toSlug(label);
+
+  if (slug === "bug") {
+    return `
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path
+          d="M6.4 7.1C6.4 5.1 8 3.5 10 3.5C12 3.5 13.6 5.1 13.6 7.1V12.2C13.6 14.2 12 15.8 10 15.8C8 15.8 6.4 14.2 6.4 12.2V7.1Z"
+          stroke="currentColor"
+          stroke-width="1.6"
+        ></path>
+        <path d="M7 6L5.2 4.6M13 6L14.8 4.6M6 9H4M16 9H14M6.3 12.2L4.8 13.4M13.7 12.2L15.2 13.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+      </svg>
+    `;
+  }
+
+  if (slug === "help-wanted") {
+    return `
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="6.8" stroke="currentColor" stroke-width="1.6"></circle>
+        <path d="M10 6.5V13.5M6.5 10H13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+    `;
+  }
+
+  if (slug === "enhancement") {
+    return `
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M10 3.8L11.5 8.5L16.2 10L11.5 11.5L10 16.2L8.5 11.5L3.8 10L8.5 8.5L10 3.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+      </svg>
+    `;
+  }
+
+  if (slug === "documentation") {
+    return `
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M6 3.8H11.5L14.2 6.5V16.2H6V3.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+        <path d="M11.2 3.8V6.8H14.2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+      </svg>
+    `;
+  }
+
+  return `
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="6.8" stroke="currentColor" stroke-width="1.6"></circle>
+    </svg>
+  `;
 }
 
 function normalizeIssue(issue) {
@@ -218,7 +304,12 @@ function renderLabelPills(labels, className = "label-pill") {
   return safeLabels
     .map((label) => {
       const slug = toSlug(label) || "general";
-      return `<span class="${className} label-tone-${slug}">${escapeHtml(label)}</span>`;
+      return `
+        <span class="${className} label-tone-${slug}">
+          <span class="label-pill-icon">${getLabelIcon(label)}</span>
+          <span>${escapeHtml(label)}</span>
+        </span>
+      `;
     })
     .join("");
 }
@@ -328,29 +419,27 @@ function renderIssues(customMessage = "") {
     card.setAttribute("aria-label", `View details for ${issue.title}`);
 
     card.innerHTML = `
-      <div class="card-head">
-        <div>
-          <p class="issue-number">Issue #${escapeHtml(issue.id)}</p>
-          <h2 class="issue-link">${escapeHtml(issue.title)}</h2>
+      <div class="card-content">
+        <div class="card-topline">
+          <span class="status-marker ${statusClass}">
+            ${getStatusIcon(issue.status)}
+          </span>
+          ${renderPriorityPill(issue.priority, "priority-pill priority-pill-small")}
         </div>
-        <span class="status-badge ${statusClass}">${escapeHtml(
-          formatStatusLabel(issue.status)
-        )}</span>
-      </div>
 
-      <p class="issue-description">${escapeHtml(shortDescription)}</p>
+        <h2 class="issue-link">${escapeHtml(issue.title)}</h2>
+        <p class="issue-description">${escapeHtml(shortDescription)}</p>
 
-      <div class="card-meta-line">
-        <span>Opened by ${escapeHtml(withFallback(issue.author))}</span>
-        <span class="meta-separator" aria-hidden="true">&bull;</span>
-        <span>${escapeHtml(formatCompactDate(issue.createdAt))}</span>
-      </div>
-
-      <div class="card-footer">
         <div class="label-row">
           ${renderLabelPills(issue.labels)}
         </div>
-        ${renderPriorityPill(issue.priority, "priority-pill priority-pill-small")}
+      </div>
+
+      <div class="card-footer">
+        <p class="card-meta-text">#${escapeHtml(issue.id)} by ${escapeHtml(
+          withFallback(issue.author)
+        )}</p>
+        <p class="card-meta-text">${escapeHtml(formatCardDate(issue.createdAt))}</p>
       </div>
     `;
 
