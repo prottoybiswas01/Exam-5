@@ -397,7 +397,14 @@ function renderIssues(customMessage = "") {
     card.dataset.issueId = issue.id;
     card.tabIndex = 0;
     card.setAttribute("role", "button");
-    card.setAttribute("aria-label", `View details for ${issue.title}`);
+    card.setAttribute(
+      "aria-label",
+      `View details for ${issue.title}. Status ${formatStatusLabel(
+        issue.status
+      )}. Priority ${withFallback(issue.priority)}. Author ${withFallback(
+        issue.author
+      )}. Created ${formatCardDate(issue.createdAt)}.`
+    );
 
     card.innerHTML = `
       <div class="card-content">
@@ -422,6 +429,12 @@ function renderIssues(customMessage = "") {
         )}</p>
         <p class="card-meta-text">${escapeHtml(formatCardDate(issue.createdAt))}</p>
       </div>
+
+      <span class="sr-only">
+        Status ${escapeHtml(formatStatusLabel(issue.status))}, labels ${escapeHtml(
+          issue.labelText
+        )}, updated ${escapeHtml(formatDate(issue.updatedAt))}.
+      </span>
     `;
 
     issuesGrid.append(card);
@@ -497,6 +510,16 @@ function renderIssueDetails(issue) {
         ${renderPriorityPill(issue.priority)}
       </div>
     </div>
+
+    <p class="sr-only">
+      Full issue details. ID ${escapeHtml(issue.id)}. Status ${escapeHtml(
+        formatStatusLabel(issue.status)
+      )}. Author ${author}. Assignee ${assignee}. Labels ${escapeHtml(
+        issue.labelText
+      )}. Created ${escapeHtml(formatDate(issue.createdAt))}. Updated ${escapeHtml(
+        formatDate(issue.updatedAt)
+      )}.
+    </p>
 
     <div class="modal-actions">
       <button type="button" class="modal-action-btn" data-modal-close>Close</button>
