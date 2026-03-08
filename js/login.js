@@ -16,6 +16,7 @@ const passwordInput = document.getElementById("password");
 const errorText = document.getElementById("auth-error");
 const demoUsernameText = document.getElementById("demo-username");
 const demoPasswordText = document.getElementById("demo-password");
+const demoCard = document.getElementById("demo-card");
 
 function getStorageKey() {
   return appConfig.auth.storageKey || DEFAULT_CONFIG.auth.storageKey;
@@ -58,6 +59,17 @@ function syncDemoCredentialText() {
   demoPasswordText.textContent = getDemoPassword();
 }
 
+function clearError() {
+  errorText.textContent = "";
+}
+
+function applyDemoCredentials() {
+  usernameInput.value = getDemoUsername();
+  passwordInput.value = getDemoPassword();
+  clearError();
+  usernameInput.focus();
+}
+
 function handleLoginSubmit(event) {
   event.preventDefault();
 
@@ -69,6 +81,7 @@ function handleLoginSubmit(event) {
     return;
   }
 
+  clearError();
   localStorage.setItem(
     getStorageKey(),
     JSON.stringify({
@@ -87,6 +100,19 @@ async function initialize() {
   if (localStorage.getItem(getStorageKey())) {
     window.location.href = "issues.html";
     return;
+  }
+
+  usernameInput.addEventListener("input", clearError);
+  passwordInput.addEventListener("input", clearError);
+
+  if (demoCard) {
+    demoCard.addEventListener("click", applyDemoCredentials);
+    demoCard.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+
+      event.preventDefault();
+      applyDemoCredentials();
+    });
   }
 
   loginForm.addEventListener("submit", handleLoginSubmit);

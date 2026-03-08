@@ -233,11 +233,24 @@ input {
   padding: 24px;
   background: var(--surface-alt);
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.demo-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.demo-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(74, 0, 255, 0.14);
 }
 
 .demo-card p {
   margin: 0;
   font-size: 1rem;
+  text-align: center;
 }
 
 .demo-card strong {
