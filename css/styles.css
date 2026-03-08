@@ -670,6 +670,24 @@ input {
   background: var(--surface-alt);
   color: var(--muted);
   text-align: center;
+  display: grid;
+  place-items: center;
+  gap: 14px;
+}
+
+.empty-state-action {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(74, 0, 255, 0.18);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: var(--brand);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.empty-state-action:hover {
+  background: var(--brand-soft);
 }
 
 .modal-overlay {

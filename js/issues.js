@@ -301,16 +301,29 @@ function renderIssues(customMessage = "") {
   issuesGrid.innerHTML = "";
 
   if (!state.visibleIssues.length) {
-    emptyState.textContent =
+    const message =
       customMessage ||
       (state.query.trim()
         ? "No matching issues found. Try another keyword."
         : "No issues found for the selected filter.");
+
+    if (state.query.trim()) {
+      emptyState.innerHTML = `
+        <span>${escapeHtml(message)}</span>
+        <button type="button" class="empty-state-action" data-reset-search>
+          Clear search
+        </button>
+      `;
+    } else {
+      emptyState.textContent = message;
+    }
+
     emptyState.classList.remove("hidden");
     return;
   }
 
   emptyState.classList.add("hidden");
+  emptyState.innerHTML = "";
 
   state.visibleIssues.forEach((issue) => {
     const card = document.createElement("article");
@@ -542,6 +555,14 @@ function registerEvents() {
   });
 
   modalCloseButton.addEventListener("click", closeModal);
+
+  emptyState.addEventListener("click", async (event) => {
+    if (!event.target.closest("[data-reset-search]")) return;
+
+    searchInput.value = "";
+    state.query = "";
+    await loadIssues();
+  });
 
   modalOverlay.addEventListener("click", (event) => {
     if (event.target.closest("[data-modal-close]")) {
