@@ -20,6 +20,7 @@ const state = {
   sourceIssues: [],
   visibleIssues: [],
   isLoading: false,
+  lastFocusedElement: null,
 };
 
 const searchForm = document.getElementById("search-form");
@@ -379,14 +380,30 @@ function setActiveTab() {
 }
 
 function openModalShell() {
+  state.lastFocusedElement = document.activeElement;
   modalOverlay.classList.remove("hidden");
   document.body.style.overflow = "hidden";
+  modalCloseButton.focus();
 }
 
 function closeModal() {
   modalOverlay.classList.add("hidden");
   modalContent.innerHTML = "";
   document.body.style.overflow = "";
+
+  if (state.lastFocusedElement && typeof state.lastFocusedElement.focus === "function") {
+    state.lastFocusedElement.focus();
+  }
+
+  state.lastFocusedElement = null;
+}
+
+function getModalFocusableElements() {
+  return Array.from(
+    modalOverlay.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+  ).filter((element) => !element.disabled && !element.classList.contains("hidden"));
 }
 
 function renderIssueDetails(issue) {
@@ -457,7 +474,11 @@ function renderIssueDetails(issue) {
   `;
 }
 
-async function openIssueModal(issueId) {
+async function openIssueModal(issueId, triggerElement) {
+  if (triggerElement) {
+    state.lastFocusedElement = triggerElement;
+  }
+
   openModalShell();
 
   modalContent.innerHTML = `
@@ -541,7 +562,7 @@ function registerEvents() {
     const trigger = event.target.closest(".issue-card[data-issue-id]");
     if (!trigger) return;
 
-    openIssueModal(trigger.dataset.issueId);
+    openIssueModal(trigger.dataset.issueId, trigger);
   });
 
   issuesGrid.addEventListener("keydown", (event) => {
@@ -551,7 +572,7 @@ function registerEvents() {
     if (!trigger) return;
 
     event.preventDefault();
-    openIssueModal(trigger.dataset.issueId);
+    openIssueModal(trigger.dataset.issueId, trigger);
   });
 
   modalCloseButton.addEventListener("click", closeModal);
@@ -578,6 +599,27 @@ function registerEvents() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !modalOverlay.classList.contains("hidden")) {
       closeModal();
+    }
+  });
+
+  modalOverlay.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") return;
+
+    const focusableElements = getModalFocusableElements();
+    if (!focusableElements.length) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+      return;
+    }
+
+    if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
     }
   });
 }
